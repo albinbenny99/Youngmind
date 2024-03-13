@@ -14,7 +14,19 @@
     <h2>Guidelines:</h2>
     <p>{{ hackathon.guidelines }}</p>
 
+    <select id="signupOption">
+        <option value="{% url 'student_signup' %}">Student Sign Up</option>
+        <option value="{% url 'faculty_signup' %}">Faculty Sign Up</option>
+    </select>
+    <button onclick="signup()">Signup</button>
+
     <a href="{% url 'login' %}">Login</a>
-    <a href="{% url 'register' %}">Sign Up</a>
+
+    <script>
+        function signup() {
+            var option = document.getElementById("signupOption").value;
+            window.location.href = option;
+        }
+    </script>
 </body>
 </html>

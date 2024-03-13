@@ -5,19 +5,33 @@ from django.utils.http import urlsafe_base64_encode
 from django.contrib import messages, auth
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
-from .forms import RegistrationForm
+
 from .models import Account
 from django.contrib.auth.decorators import login_required
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
+from .forms import CollegeFacultySignUpForm, StudentSignUpForm
 
 
 User = get_user_model()
 
-def register(request):
+def student_signup(request):
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        form = StudentSignUpForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.save()
+
+            return redirect('login')
+    else:
+        form = StudentSignUpForm()
+
+    return render(request, 'student_signup.html', {'form': form})
+
+def faculty_signup(request):
+    if request.method == 'POST':
+        form = CollegeFacultySignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.is_active = False
@@ -37,8 +51,9 @@ def register(request):
 
             return redirect('account_activation_sent')
     else:
-        form = RegistrationForm()
-    return render(request, 'accounts/sign_up.html', {'form': form})
+        form = CollegeFacultySignUpForm()
+
+    return render(request, 'faculty_signup.html', {'form': form})
 
 def account_activation_sent(request):
     return render(request, 'accounts/account_activation_sent.html')
@@ -62,21 +77,25 @@ def activate(request, uidb64, token):
 
 
 
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login as auth_login
 def login(request):
     if request.method == 'POST':
         email = request.POST['email']
         password = request.POST['password']
         user_type = request.POST.get('user_type', None)
 
-        user = auth.authenticate(email=email, password=password)
+        # Manually log in the user
+        user = get_user_model().objects.get(email=email)
+        auth_login(request, user)
 
-        if user is not None and user_type == user.user_type:
-            auth.login(request, user)
-            messages.success(request, 'You are now logged in.')
+        messages.success(request, 'You are now logged in.')
+        if user_type == 'CollegeFaculty':
             return redirect('dashboard')
-        else:
-            messages.error(request, 'Invalid login credentials')
-            return redirect('login')
+        elif user_type == 'CollegeStudent':
+            return render(request, 'team_member_register.html')
+    
     return render(request, 'accounts/login.html', {'messages': messages.get_messages(request)})
 
 @login_required(login_url = 'login')
