@@ -80,3 +80,25 @@ class Account(AbstractBaseUser):
 
     def has_module_perms(self, app_label):
         return True
+
+class Team(models.Model):
+    team_name = models.CharField(max_length=100, unique=True)
+    team_leader = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='team_leader')
+
+    def __str__(self):
+        return self.team_name
+
+class TeamMember(models.Model):
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='team_members')
+    full_name = models.CharField(max_length=100)
+    email = models.EmailField()
+    mobile_number = models.CharField(max_length=15)
+    gender = models.CharField(max_length=10)
+    stream = models.CharField(max_length=100)
+    academic_year = models.CharField(max_length=100)
+    passport_photo = models.ImageField(upload_to='passport_photos/')
+    aadhar_card = models.ImageField(upload_to='aadhar_cards/')
+    photo = models.ImageField(upload_to='passport_photos/', default='default_photo.jpg')  # Add default value here
+    verification_document = models.ImageField(upload_to='verification_documents/', default='default_verification_document.jpg')
+    def __str__(self):
+        return self.full_name

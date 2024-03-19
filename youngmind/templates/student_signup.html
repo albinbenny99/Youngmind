@@ -2,12 +2,27 @@
 <html>
 <head>
     <title>Student Sign Up</title>
+    <script>
+        function showTeamMemberForm() {
+            document.getElementById("mainForm").style.display = "none";
+            document.getElementById("teamMemberForm").style.display = "block";
+        }
+    </script>
 </head>
 <body>
     <h1>Student Sign Up</h1>
-    <form method="post">
+    <form id="mainForm" method="post" onsubmit="showTeamMemberForm(); return false;">
         {% csrf_token %}
         {{ form.as_p }}
+        <button type="submit">Next</button>
+    </form>
+
+    <form id="teamMemberForm" method="post" style="display: none;">
+        {% csrf_token %}
+        <h2>Team Member Registration</h2>
+        <div class="team-member">
+            {{ team_member_form.as_p }}
+        </div>
         <button type="submit">Sign Up</button>
     </form>
 </body>

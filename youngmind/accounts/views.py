@@ -6,12 +6,12 @@ from django.contrib import messages, auth
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.mail import EmailMessage
 
-from .models import Account
+from .models import Account,Team, TeamMember
 from django.contrib.auth.decorators import login_required
 from django.utils.http import urlsafe_base64_decode
 from django.contrib.auth import get_user_model
 from django.template.loader import render_to_string
-from .forms import CollegeFacultySignUpForm, StudentSignUpForm
+from .forms import CollegeFacultySignUpForm, StudentSignUpForm,TeamMemberRegistrationForm
 
 
 User = get_user_model()
@@ -19,15 +19,36 @@ User = get_user_model()
 def student_signup(request):
     if request.method == 'POST':
         form = StudentSignUpForm(request.POST)
-        if form.is_valid():
+        team_member_form = TeamMemberRegistrationForm(request.POST, request.FILES)
+        if form.is_valid() and team_member_form.is_valid():
+            # Save the StudentSignUpForm data
             user = form.save(commit=False)
+            user.is_active = False  # Deactivate the user until email verification is complete
             user.save()
 
-            return redirect('login')
+            # Save the TeamMemberRegistrationForm data
+            team_member = team_member_form.save(commit=False)
+            team_member.save()
+
+            # Send verification email
+            current_site = get_current_site(request)
+            mail_subject = 'Activate your account'
+            message = render_to_string('accounts/account_activation_email.html', {
+                'user': user,
+                'domain': current_site.domain,
+                'uid': urlsafe_base64_encode(force_bytes(user.pk)),
+                'token': default_token_generator.make_token(user),
+            })
+            to_email = form.cleaned_data.get('email')
+            email = EmailMessage(mail_subject, message, to=[to_email])
+            email.send()
+
+            return redirect('account_activation_sent')
     else:
         form = StudentSignUpForm()
+        team_member_form = TeamMemberRegistrationForm()
 
-    return render(request, 'student_signup.html', {'form': form})
+    return render(request, 'student_signup.html', {'form': form, 'team_member_form': team_member_form})
 
 def faculty_signup(request):
     if request.method == 'POST':

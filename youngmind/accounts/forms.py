@@ -1,5 +1,5 @@
 from django import forms
-from .models import Account
+from .models import Account,TeamMember
 
 class CollegeFacultySignUpForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
@@ -20,11 +20,11 @@ class CollegeFacultySignUpForm(forms.ModelForm):
 class StudentSignUpForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Password'}))
     confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'placeholder': 'Confirm Password'}))
-    user_role = forms.CharField(widget=forms.HiddenInput(), initial='Student')
+    
 
     class Meta:
         model = Account
-        fields = ['email', 'password', 'confirm_password', 'user_role', 'team_leader_first_name', 'team_leader_last_name','college_name', 'state', 'city', 'district', 'faculty_name', 'faculty_designation', 'mobile_number', 'faculty_email_id', 'photo', 'verification_document']
+        fields = ['email', 'password', 'confirm_password', 'team_leader_first_name', 'team_leader_last_name', 'college_name', 'state', 'city', 'district', 'faculty_name', 'faculty_designation', 'mobile_number', 'faculty_email_id', 'photo', 'verification_document']
 
     def clean_confirm_password(self):
         password = self.cleaned_data.get('password')
@@ -32,3 +32,8 @@ class StudentSignUpForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             raise forms.ValidationError("Passwords don't match")
         return confirm_password
+
+class TeamMemberRegistrationForm(forms.ModelForm):
+    class Meta:
+        model = TeamMember
+        fields = ['full_name', 'email', 'mobile_number', 'gender', 'stream', 'academic_year', 'photo', 'verification_document']
